@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard - 3DNA Bus Tracking</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/driver-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🚌</span>
+                <span class="logo-text">3DNA DRIVER</span>
+            </div>
+            <ul class="nav-links">
+                <li><span id="driver-name">Driver</span></li>
+                <li><button onclick="logout()" class="btn-logout">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Driver Container -->
+    <div class="driver-container">
+        <!-- Status Panel -->
+        <div class="status-panel">
+            <div class="status-header">
+                <h2>Bus Status</h2>
+                <div class="status-indicator">
+                    <span id="status-dot" class="status-dot offline"></span>
+                    <span id="status-text">Offline</span>
+                </div>
+            </div>
+
+            <div class="bus-info">
+                <div class="info-item">
+                    <label>Bus Number:</label>
+                    <p id="bus-number">-</p>
+                </div>
+                <div class="info-item">
+                    <label>Route:</label>
+                    <p id="route-name">-</p>
+                </div>
+                <div class="info-item">
+                    <label>Current Location:</label>
+                    <p id="current-location">-</p>
+                </div>
+                <div class="info-item">
+                    <label>Passengers:</label>
+                    <p id="passenger-count">0</p>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="control-buttons">
+                <button id="start-trip-btn" class="btn btn-success btn-block" onclick="startTrip()">
+                    ▶️ Start Trip
+                </button>
+                <button id="stop-trip-btn" class="btn btn-danger btn-block hidden" onclick="stopTrip()">
+                    ⏹️ Stop Trip
+                </button>
+                <button id="pause-trip-btn" class="btn btn-warning btn-block hidden" onclick="pauseTrip()">
+                    ⏸️ Pause Trip
+                </button>
+                <button id="update-location-btn" class="btn btn-secondary btn-block" onclick="updateLocation()">
+                    📍 Update Location
+                </button>
+            </div>
+
+            <!-- GPS Settings -->
+            <div class="gps-settings">
+                <h3>GPS Settings</h3>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="auto-gps" checked>
+                        Auto-update GPS every 2 seconds
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="update-interval">Update Interval (seconds):</label>
+                    <input type="number" id="update-interval" min="1" max="60" value="2">
+                </div>
+                <div class="setting-item">
+                    <label for="passenger-count-input">Current Passengers:</label>
+                    <input type="number" id="passenger-count-input" min="0" max="100" value="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Area -->
+        <div class="map-area">
+            <div id="driver-map" class="map"></div>
+            <div class="map-info">
+                <p>Current Speed: <strong id="current-speed">0</strong> km/h</p>
+                <p>Last Update: <strong id="last-update">Never</strong></p>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-panel">
+            <div class="stats-header">
+                <h3>Today's Statistics</h3>
+            </div>
+            <div class="stat-item">
+                <label>Distance Traveled:</label>
+                <p id="distance-traveled"><strong>0</strong> km</p>
+            </div>
+            <div class="stat-item">
+                <label>Total Stops:</label>
+                <p id="total-stops"><strong>0</strong></p>
+            </div>
+            <div class="stat-item">
+                <label>Completed Stops:</label>
+                <p id="completed-stops"><strong>0</strong></p>
+            </div>
+            <div class="stat-item">
+                <label>Trip Duration:</label>
+                <p id="trip-duration"><strong>0h 0m</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="../js/driver-dashboard.js"></script>
+</body>
+</html>

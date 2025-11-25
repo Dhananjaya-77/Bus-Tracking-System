@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Bus Tracking Map - 3DNA</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/tracking-map.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🚌</span>
+                <span class="logo-text">3DNA BUS</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="driver-login.html" class="btn-login">Driver</a></li>
+                <li><a href="admin-login.html" class="btn-admin">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="tracking-container">
+        <!-- Left Sidebar - Route Selection & Bus List -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Active Buses</h2>
+                <button id="refresh-btn" class="btn-refresh">🔄 Refresh</button>
+            </div>
+
+            <!-- Route Filter -->
+            <div class="filter-section">
+                <label for="route-filter">Filter by Route:</label>
+                <select id="route-filter">
+                    <option value="">All Routes</option>
+                </select>
+            </div>
+
+            <!-- Bus List -->
+            <div id="bus-list" class="bus-list">
+                <div class="loading">Loading buses...</div>
+            </div>
+        </div>
+
+        <!-- Main Map Area -->
+        <div class="map-area">
+            <div id="map" class="map"></div>
+
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button id="center-map-btn" class="map-control-btn" title="Center Map">
+                    📍
+                </button>
+                <button id="auto-update-toggle" class="map-control-btn active" title="Toggle Auto Update">
+                    🔄
+                </button>
+            </div>
+
+            <!-- Bus Details Popup -->
+            <div id="bus-details-popup" class="bus-popup hidden">
+                <button class="popup-close" onclick="closeBusPopup()">✕</button>
+                <div id="popup-content"></div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Bus Details -->
+        <div class="details-panel">
+            <div class="details-header">
+                <h3>Bus Information</h3>
+            </div>
+            <div id="bus-details" class="bus-details">
+                <p class="no-selection">Select a bus to view details</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Library Includes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="../js/tracking-map.js"></script>
+</body>
+</html>

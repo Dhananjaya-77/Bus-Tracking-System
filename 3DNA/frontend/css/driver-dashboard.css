@@ -1,0 +1,366 @@
+/* ============================================
+   DRIVER DASHBOARD STYLES
+   ============================================ */
+
+.driver-container {
+    display: grid;
+    grid-template-columns: 350px 1fr 300px;
+    gap: 20px;
+    height: calc(100vh - 70px);
+    padding: 20px;
+    background-color: var(--light-bg);
+    overflow: hidden;
+}
+
+/* Status Panel */
+
+.status-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.status-header h2 {
+    color: var(--primary-blue);
+    font-size: 1.3rem;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.offline {
+    background-color: #ccc;
+    animation: none;
+}
+
+.status-dot.active {
+    background-color: var(--success);
+}
+
+.status-dot.paused {
+    background-color: var(--warning);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+#status-text {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.bus-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-item label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.info-item p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-buttons .btn {
+    padding: 12px;
+    font-size: 0.95rem;
+    width: 100%;
+}
+
+.btn.hidden {
+    display: none;
+}
+
+.gps-settings {
+    background-color: var(--light-bg);
+    padding: 20px;
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-blue);
+}
+
+.gps-settings h3 {
+    color: var(--primary-blue);
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-item label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.setting-item input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.setting-item input[type="number"] {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+/* Map Area */
+
+.map-area {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+}
+
+.map {
+    flex: 1;
+}
+
+.map-info {
+    background-color: #f5f7fa;
+    padding: 15px 20px;
+    display: flex;
+    gap: 30px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.95rem;
+}
+
+.map-info p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.map-info strong {
+    color: var(--primary-blue);
+    font-weight: 700;
+}
+
+/* Statistics Panel */
+
+.stats-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.stats-header h3 {
+    color: var(--primary-blue);
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 15px;
+    background-color: var(--light-bg);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-blue);
+}
+
+.stat-item label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.stat-item p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.stat-item strong {
+    color: var(--primary-blue);
+}
+
+/* Responsive */
+
+@media (max-width: 1400px) {
+    .driver-container {
+        grid-template-columns: 300px 1fr;
+    }
+
+    .stats-panel {
+        display: none;
+    }
+}
+
+@media (max-width: 1000px) {
+    .driver-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+    }
+
+    .status-panel {
+        grid-column: 1;
+        max-height: 300px;
+        overflow-x: auto;
+    }
+
+    .map-area {
+        grid-column: 1;
+        height: 400px;
+    }
+
+    .stats-panel {
+        display: flex;
+        grid-column: 1;
+        max-height: 200px;
+        overflow-x: auto;
+    }
+
+    .stats-panel {
+        flex-direction: row;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .stat-item {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .driver-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr auto;
+        height: auto;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .status-panel {
+        max-height: 250px;
+    }
+
+    .map-area {
+        height: 300px;
+    }
+
+    .stats-panel {
+        max-height: none;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .stat-item {
+        padding: 12px;
+    }
+
+    .bus-info {
+        gap: 10px;
+    }
+
+    .info-item label {
+        font-size: 0.75rem;
+    }
+
+    .info-item p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .driver-container {
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .status-panel,
+    .map-area,
+    .stats-panel {
+        border-radius: 8px;
+    }
+
+    .stats-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .control-buttons {
+        gap: 8px;
+    }
+
+    .control-buttons .btn {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .map-info {
+        gap: 15px;
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+}

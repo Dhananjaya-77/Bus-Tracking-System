@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - 3DNA Bus Tracking</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-large">🚌</div>
+                <h1>Admin Portal</h1>
+                <p>System Administration</p>
+            </div>
+
+            <form id="admin-login-form" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Admin Email</label>
+                    <input type="email" id="email" name="email" required placeholder="admin@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox">
+                        <input type="checkbox" name="remember">
+                        Remember me
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+
+                <div id="error-message" class="error-message"></div>
+                <div id="success-message" class="success-message"></div>
+            </form>
+
+            <div class="auth-footer">
+                <p>Not an admin? <a href="index.html">Back to home</a></p>
+                <p class="demo-credentials">Demo: admin@3dna.local / password</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        // Admin-specific login
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleAdminLogin();
+        });
+
+        async function handleAdminLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+
+            errorDiv.textContent = '';
+            successDiv.textContent = '';
+
+            try {
+                const response = await fetch('../../backend/api/auth.php?action=login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        user_type: 'admin'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    successDiv.textContent = 'Login successful! Redirecting...';
+                    localStorage.setItem('user_id', data.user_id);
+                    localStorage.setItem('user_type', 'admin');
+                    localStorage.setItem('user_email', email);
+                    localStorage.setItem('auth_token', data.token);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'admin-dashboard.html';
+                    }, 1500);
+                } else {
+                    errorDiv.textContent = data.message || 'Login failed';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

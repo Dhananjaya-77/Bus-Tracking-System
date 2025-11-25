@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - 3DNA Bus Tracking</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-dashboard.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar admin-navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🚌</span>
+                <span class="logo-text">3DNA ADMIN</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="loadSection('dashboard')">Dashboard</a></li>
+                <li><a href="#" onclick="loadSection('buses')">Buses</a></li>
+                <li><a href="#" onclick="loadSection('routes')">Routes</a></li>
+                <li><a href="#" onclick="loadSection('drivers')">Drivers</a></li>
+                <li><a href="#" onclick="loadSection('users')">Users</a></li>
+                <li><button onclick="logout()" class="btn-logout">Logout</button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Admin Container -->
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-menu">
+                <button class="menu-item active" data-section="dashboard" onclick="loadSection('dashboard')">
+                    📊 Dashboard
+                </button>
+                <button class="menu-item" data-section="buses" onclick="loadSection('buses')">
+                    🚌 Buses
+                </button>
+                <button class="menu-item" data-section="routes" onclick="loadSection('routes')">
+                    🗺️ Routes
+                </button>
+                <button class="menu-item" data-section="drivers" onclick="loadSection('drivers')">
+                    👨‍💼 Drivers
+                </button>
+                <button class="menu-item" data-section="users" onclick="loadSection('users')">
+                    👥 Users
+                </button>
+                <button class="menu-item" data-section="analytics" onclick="loadSection('analytics')">
+                    📈 Analytics
+                </button>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                <button class="menu-item" onclick="logout()">
+                    🚪 Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="admin-section active">
+                <div class="section-header">
+                    <h2>Dashboard Overview</h2>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🚌</div>
+                        <div class="stat-content">
+                            <h3>Total Buses</h3>
+                            <p id="stat-buses">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <h3>Active Buses</h3>
+                            <p id="stat-active">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👨‍💼</div>
+                        <div class="stat-content">
+                            <h3>Total Drivers</h3>
+                            <p id="stat-drivers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🗺️</div>
+                        <div class="stat-content">
+                            <h3>Total Routes</h3>
+                            <p id="stat-routes">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="activity-section">
+                    <h3>Recent Activity</h3>
+                    <div id="activity-log" class="activity-log">
+                        <p>Loading activity...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Buses Management Section -->
+            <section id="buses" class="admin-section">
+                <div class="section-header">
+                    <h2>Bus Management</h2>
+                    <button class="btn btn-primary" onclick="showAddBusForm()">+ Add Bus</button>
+                </div>
+                <div id="buses-table-container" class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Bus #</th>
+                                <th>Plate</th>
+                                <th>Route</th>
+                                <th>Driver</th>
+                                <th>Status</th>
+                                <th>Capacity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="buses-list">
+                            <tr><td colspan="7">Loading buses...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Routes Management Section -->
+            <section id="routes" class="admin-section">
+                <div class="section-header">
+                    <h2>Route Management</h2>
+                    <button class="btn btn-primary" onclick="showAddRouteForm()">+ Add Route</button>
+                </div>
+                <div id="routes-table-container" class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Route #</th>
+                                <th>Name</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Distance</th>
+                                <th>Est. Time</th>
+                                <th>Stops</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routes-list">
+                            <tr><td colspan="8">Loading routes...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Drivers Management Section -->
+            <section id="drivers" class="admin-section">
+                <div class="section-header">
+                    <h2>Driver Management</h2>
+                    <button class="btn btn-primary" onclick="showAddDriverForm()">+ Add Driver</button>
+                </div>
+                <div id="drivers-table-container" class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Bus</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drivers-list">
+                            <tr><td colspan="7">Loading drivers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users Management Section -->
+            <section id="users" class="admin-section">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <button class="btn btn-primary" onclick="showAddUserForm()">+ Add User</button>
+                </div>
+                <div id="users-table-container" class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <tr><td colspan="7">Loading users...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="admin-section">
+                <div class="section-header">
+                    <h2>Analytics & Reports</h2>
+                </div>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Fleet Status</h3>
+                        <div id="fleet-status">Loading...</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Daily Trips</h3>
+                        <div id="daily-trips">Loading...</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for Forms -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="../js/admin-dashboard.js"></script>
+</body>
+</html>

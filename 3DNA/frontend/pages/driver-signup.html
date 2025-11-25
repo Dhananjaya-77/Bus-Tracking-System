@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Sign Up - 3DNA Bus Tracking</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <span class="logo-text">3DNA</span>
+                <span class="logo-subtitle">Bus Tracking</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="driver-login.html">Driver Login</a></li>
+                <li><a href="admin-login.html">Admin Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Driver Registration</h1>
+            <p class="auth-subtitle">Create your driver account</p>
+
+            <form id="signupForm" class="auth-form">
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Enter your full name" required>
+                    <span class="error-message" id="fullNameError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    <span class="error-message" id="emailError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+                    <span class="error-message" id="phoneError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="license">Driver License Number *</label>
+                    <input type="text" id="license" name="license" placeholder="Enter your license number" required>
+                    <span class="error-message" id="licenseError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" placeholder="Create a strong password" required>
+                    <span class="error-message" id="passwordError"></span>
+                    <small>Minimum 6 characters, include uppercase and numbers</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password *</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                    <span class="error-message" id="confirmPasswordError"></span>
+                </div>
+
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">I agree to the Terms and Conditions *</label>
+                    <span class="error-message" id="termsError"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+
+                <div class="success-message" id="successMessage" style="display: none;">
+                    ✓ Account created successfully! Redirecting to login...
+                </div>
+
+                <div class="form-divider">
+                    <p>Already have an account? <a href="driver-login.html">Sign in here</a></p>
+                </div>
+            </form>
+
+            <div class="demo-info">
+                <p><strong>Demo Registration Available:</strong></p>
+                <p>Use test email: <code>driver@demo.com</code></p>
+                <p>Or create a new account above</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/driver-signup.js"></script>
+</body>
+</html>
