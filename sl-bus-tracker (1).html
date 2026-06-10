@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SL Bus Tracker — Real-time Sri Lanka Bus Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#1B8C5E;--green-lt:#E4F5EE;--green-dk:#0D5A3C;
+    --amber:#D97706;--amber-lt:#FEF3C7;
+    --red:#DC2626;--red-lt:#FEE2E2;
+    --blue:#185FA5;
+    --ink:#111827;--ink-2:#374151;--ink-3:#6B7280;--ink-4:#9CA3AF;
+    --border:#E5E7EB;--surface:#F9FAFB;--white:#FFFFFF;
+    --radius:10px;--radius-lg:14px;
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:#F3F4F6;color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+
+  /* NAV */
+  nav{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1000;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px}
+  .nav-brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--ink);text-decoration:none}
+  .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .nav-links{display:flex;gap:4px}
+  .nav-link{padding:6px 14px;border-radius:8px;font-size:13px;color:var(--ink-3);cursor:pointer;transition:all .15s;border:none;background:none;font-family:inherit}
+  .nav-link:hover,.nav-link.active{background:var(--surface);color:var(--ink)}
+  .nav-link.active{font-weight:500}
+  .nav-time{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  @media(max-width:640px){.nav-links{display:none}}
+
+  /* HERO */
+  .hero{background:linear-gradient(135deg,#0D5A3C 0%,#1B8C5E 60%,#22C67B 100%);padding:36px 24px 32px;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1' fill='%23ffffff' opacity='0.06'/%3E%3C/svg%3E") repeat}
+  .hero-inner{max-width:1200px;margin:0 auto;position:relative}
+  .hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,4vw,34px);font-weight:700;color:#fff;line-height:1.15;margin-bottom:8px}
+  .hero h1 span{opacity:.7;font-weight:500}
+  .hero-sub{color:rgba(255,255,255,.75);font-size:14px;margin-bottom:22px}
+  .hero-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;max-width:560px}
+  .hstat{background:rgba(255,255,255,.12);border-radius:var(--radius);padding:11px 15px;border:1px solid rgba(255,255,255,.15)}
+  .hstat-val{font-size:22px;font-weight:600;color:#fff;font-family:'Space Grotesk',sans-serif}
+  .hstat-label{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+  /* MAP SECTION */
+  .map-section{background:var(--white);border-bottom:1px solid var(--border)}
+  .map-wrap{max-width:1200px;margin:0 auto}
+  .map-header{padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .map-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .live-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--red);font-weight:500}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.5s infinite}
+  .map-legend{display:flex;gap:14px;flex-wrap:wrap}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-3)}
+  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  #map{width:100%;height:480px}
+  .map-bar{padding:9px 20px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .map-bar-item{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:4px}
+  .map-bar-item b{color:var(--ink)}
+  .map-bar-note{margin-left:auto;font-size:11px;color:var(--green-dk);background:var(--green-lt);padding:3px 10px;border-radius:20px}
+
+  /* PAGE */
+  .page{max-width:1200px;margin:0 auto;padding:24px 20px}
+  .grid-main{display:grid;grid-template-columns:350px 1fr;gap:20px}
+  @media(max-width:860px){.grid-main{grid-template-columns:1fr}}
+
+  /* SECTION HEAD */
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .sec-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px}
+  .sec-title svg{width:16px;height:16px;stroke:var(--green);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .sec-badge{font-size:11px;padding:3px 9px;border-radius:20px;background:var(--green-lt);color:var(--green-dk);font-weight:500}
+
+  /* BUS CARDS */
+  .bus-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:10px;transition:box-shadow .15s,border-color .15s;cursor:pointer;position:relative;overflow:hidden}
+  .bus-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+  .bus-card.selected{border-color:var(--green);box-shadow:0 0 0 2px var(--green-lt)}
+  .accent-bar{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+  .card-inner{padding-left:8px}
+  .bus-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+  .bus-id{font-size:14px;font-weight:600;color:var(--ink)}
+  .bus-rname{font-size:12px;color:var(--ink-3);margin-top:1px}
+  .status-pill{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+  .s-on_time{background:var(--green-lt);color:var(--green-dk)}
+  .s-slight{background:var(--amber-lt);color:#92400E}
+  .s-delayed{background:var(--red-lt);color:#991B1B}
+  .bus-stops{display:flex;align-items:center;gap:6px;margin:8px 0;flex-wrap:wrap}
+  .stop-tag{font-size:12px;padding:3px 9px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--ink-2);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+  .stop-arr{color:var(--ink-4);font-size:12px;flex-shrink:0}
+  .eta-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--green-lt);color:var(--green-dk);font-weight:500;flex-shrink:0}
+  .bus-meta{display:flex;gap:12px;font-size:11px;color:var(--ink-4);margin-top:8px;flex-wrap:wrap}
+  .prog-wrap{margin:10px 0 2px}
+  .prog-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:2px;transition:width 1.2s ease}
+  .prog-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-4);margin-top:3px}
+  .ai-note{margin-top:10px;font-size:12px;color:var(--ink-3);background:#F0FDF7;border-left:2px solid var(--green);padding:7px 10px;border-radius:0 6px 6px 0}
+  .show-map-btn{margin-top:8px;font-size:11px;padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--ink-3);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+  .show-map-btn:hover{background:var(--green-lt);color:var(--green-dk);border-color:var(--green)}
+
+  /* ROUTES */
+  .route-list{display:flex;flex-direction:column;gap:10px}
+  .route-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .route-head{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+  .route-head:hover{background:var(--surface)}
+  .route-num{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:3px 10px;border-radius:6px;border:1px solid var(--border);color:var(--ink);background:var(--surface)}
+  .route-info{flex:1}
+  .route-info .rname{font-size:13px;font-weight:500;color:var(--ink)}
+  .route-info .rop{font-size:11px;color:var(--ink-4);margin-top:1px}
+  .op-sltb{color:#1B5E20}.op-private{color:#185FA5}.op-nimbus{color:#6B21A8}
+  .rtoggle{font-size:14px;color:var(--ink-4);transition:transform .2s}
+  .rtoggle.open{transform:rotate(180deg)}
+  .route-body{display:none;padding:12px 16px}
+  .route-body.open{display:block}
+  .stop-tl{position:relative;padding-left:18px}
+  .stop-tl::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:var(--border)}
+  .stop-tl-item{position:relative;padding:5px 0 5px 12px}
+  .stop-tl-item::before{content:'';position:absolute;left:-13px;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:50%;background:var(--white);border:2px solid var(--green)}
+  .stop-tl-item:first-child::before,.stop-tl-item:last-child::before{background:var(--green)}
+  .stop-row{display:flex;justify-content:space-between;align-items:center}
+  .sname{font-size:12px;color:var(--ink-2)}
+  .smin{font-size:11px;color:var(--ink-4)}
+  .route-fare{margin-top:10px;font-size:12px;display:flex;align-items:center;gap:6px;color:var(--ink-3);padding-top:10px;border-top:1px solid var(--border)}
+  .fare-val{font-weight:600;color:var(--ink)}
+
+  /* AI */
+  .ai-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:20px}
+  .ai-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .ai-icon{width:32px;height:32px;border-radius:8px;background:#F0FDF7;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .ai-hdr h3{font-size:14px;font-weight:600;color:var(--ink)}
+  .ai-hdr p{font-size:12px;color:var(--ink-4);margin-top:1px}
+  .ai-body{padding:14px 16px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .chip{font-size:12px;padding:5px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--ink-2);cursor:pointer;transition:all .15s;font-family:inherit}
+  .chip:hover{background:var(--green-lt);border-color:var(--green);color:var(--green-dk)}
+  .ai-inp-wrap{display:flex;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:4px 4px 4px 12px;transition:border-color .15s}
+  .ai-inp-wrap:focus-within{border-color:var(--green)}
+  .ai-inp-wrap input{flex:1;border:none;background:transparent;font-size:13px;color:var(--ink);outline:none;font-family:inherit}
+  .ai-inp-wrap input::placeholder{color:var(--ink-4)}
+  .ai-send{padding:7px 16px;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
+  .ai-send:hover{background:var(--green-dk)}
+  .ai-resp{margin-top:14px;font-size:13px;color:var(--ink);background:#F0FDF7;border-radius:var(--radius);padding:12px 14px;min-height:52px;line-height:1.7;border:1px solid #C6F6E1;display:none}
+  .ai-resp.show{display:block}
+  .thinking{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-3)}
+  .dots span{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin:0 1px;animation:bounce 1.2s infinite}
+  .dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+  @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+  /* ANNOUNCE */
+  .ann-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .ann-list{max-height:200px;overflow-y:auto;padding:8px 0}
+  .ann-item{padding:8px 16px;font-size:12px;color:var(--ink-2);border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+  .ann-item:last-child{border-bottom:none}
+  .a-time{font-size:11px;color:var(--ink-4);white-space:nowrap;flex-shrink:0;margin-top:1px;font-variant-numeric:tabular-nums}
+  .a-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:5px}
+  .a-dot.warn{background:var(--amber)}.a-dot.info{background:#60A5FA}
+
+  footer{margin-top:32px;padding:20px 24px;border-top:1px solid var(--border);background:var(--white);text-align:center;font-size:12px;color:var(--ink-4)}
+
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+  /* Leaflet popup custom */
+  .leaflet-popup-content{font-family:'Inter',sans-serif!important;font-size:13px!important;line-height:1.6!important;min-width:190px}
+  .leaflet-popup-content-wrapper{border-radius:10px!important;box-shadow:0 4px 20px rgba(0,0,0,.15)!important}
+  .popup-bus-id{font-size:15px;font-weight:600;margin-bottom:4px}
+  .popup-row{margin:3px 0;font-size:12px;color:#374151}
+  .popup-status{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">
+    🚌 SL Bus Tracker <span class="pulse-dot"></span>
+  </a>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="scrollTo(0,0)">Live</button>
+    <button class="nav-link" onclick="document.getElementById('mapsec').scrollIntoView({behavior:'smooth'})">Map</button>
+    <button class="nav-link" onclick="document.getElementById('routesec').scrollIntoView({behavior:'smooth'})">Routes</button>
+    <button class="nav-link" onclick="document.getElementById('aisec').scrollIntoView({behavior:'smooth'})">AI</button>
+  </div>
+  <span class="nav-time" id="nav-clock">--:--:--</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Real-time bus tracking<br><span>for Sri Lanka</span></h1>
+    <p class="hero-sub">Live map · AI delay predictions · Colombo &amp; long-distance routes · OpenStreetMap powered</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-val" id="h-buses">4</div><div class="hstat-label">Active buses</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-pax">—</div><div class="hstat-label">Passengers live</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-routes">4</div><div class="hstat-label">Routes tracked</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-ontime">—%</div><div class="hstat-label">On time</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="map-section" id="mapsec">
+  <div class="map-wrap">
+    <div class="map-header">
+      <div class="map-title">
+        📍 Live map — Sri Lanka
+        <span class="live-badge"><span class="live-dot"></span> Live</span>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#1B8C5E"></div>SLTB</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div>Private</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7C3AED"></div>Nimbus</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#D97706"></div>Route 100</div>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="map-bar">
+      <div class="map-bar-item">🚌 <b id="map-count">4</b> buses on map</div>
+      <div class="map-bar-item">🔄 Updates every <b>5 sec</b></div>
+      <div class="map-bar-item">🖱️ Click any bus for details</div>
+      <div class="map-bar-note">✅ Free OpenStreetMap — no API key needed</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="page">
+  <div class="grid-main">
+
+    <!-- LEFT: bus cards -->
+    <div>
+      <div class="sec-head">
+        <div class="sec-title">
+          <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Active buses
+        </div>
+        <span class="sec-badge" id="buses-count">4 live</span>
+      </div>
+      <div id="bus-list"></div>
+    </div>
+
+    <!-- RIGHT: AI + Announce + Routes -->
+    <div>
+      <!-- AI -->
+      <div id="aisec">
+        <div class="ai-panel">
+          <div class="ai-hdr">
+            <div class="ai-icon">🤖</div>
+            <div><h3>AI assistant</h3><p>Ask about buses, delays, fares, or routes</p></div>
+          </div>
+          <div class="ai-body">
+            <div class="chips">
+              <button class="chip" onclick="askAI('Are there any delays right now?')">Any delays?</button>
+              <button class="chip" onclick="askAI('Where are all buses now?')">Bus locations</button>
+              <button class="chip" onclick="askAI('Fare from Colombo to Kandy?')">Fare to Kandy</button>
+              <button class="chip" onclick="askAI('Next bus to Galle?')">Next Galle bus</button>
+              <button class="chip" onclick="askAI('Which route goes to Matara?')">Route to Matara</button>
+            </div>
+            <div class="ai-inp-wrap">
+              <input type="text" id="ai-input" placeholder="Ask about schedules, ETAs, fares..." onkeydown="if(event.key==='Enter')sendAI()">
+              <button class="ai-send" onclick="sendAI()">Ask ↗</button>
+            </div>
+            <div class="ai-resp" id="ai-resp"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements -->
+      <div style="margin-bottom:20px">
+        <div class="sec-head">
+          <div class="sec-title">
+            <svg viewBox="0 0 24 24"><path d="M22 3 2 9.27l7.33 2.4L12 21l1.77-5.87L22 3z"/></svg>
+            Live announcements
+          </div>
+          <span class="live-badge"><span class="live-dot"></span> Live</span>
+        </div>
+        <div class="ann-panel"><div class="ann-list" id="ann-list"></div></div>
+      </div>
+
+      <!-- Routes -->
+      <div id="routesec">
+        <div class="sec-head">
+          <div class="sec-title">
+            <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            Bus routes
+          </div>
+        </div>
+        <div class="route-list" id="route-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>SL Bus Tracker · Simulated demo · OpenStreetMap © contributors · Operators: SLTB · Private Express · Nimbus Pilot</footer>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── REAL SRI LANKA COORDINATES ──────────────────────────────────────────────
+const COORDS = {
+  "Colombo Fort":      [6.9344, 79.8428],
+  "Kegalle":           [7.2500, 80.3464],
+  "Peradeniya":        [7.2659, 80.5995],
+  "Kandy Clock Tower": [7.2906, 80.6337],
+  "Kandy Good Shed":   [7.2954, 80.6361],
+  "Kottawa":           [6.8406, 79.9761],
+  "Gelangama":         [6.3607, 80.0892],
+  "Galle":             [6.0535, 80.2210],
+  "Panadura":          [6.7136, 79.9016],
+  "Ahangama":          [5.9735, 80.3612],
+  "Weligama":          [5.9749, 80.4283],
+  "Matara":            [5.9549, 80.5550],
+  "Kadawatha":         [7.0028, 79.9502],
+  "Kiribathgoda":      [6.9792, 79.9281],
+  "Peliyagoda":        [6.9534, 79.8877],
+  "Maradana":          [6.9251, 79.8631]
+};
+
+const ROUTES = {
+  "138": { name:"Colombo → Kandy",    operator:"SLTB",          opClass:"op-sltb",    type:"Long Distance", color:"#1B8C5E",
+    stops:["Colombo Fort","Kegalle","Peradeniya","Kandy Clock Tower","Kandy Good Shed"], times:[0,45,90,115,120], fare:"Rs. 250–350" },
+  "01":  { name:"Colombo → Galle",    operator:"Private Express",opClass:"op-private", type:"Express",       color:"#185FA5",
+    stops:["Colombo Fort","Kottawa","Gelangama","Galle"], times:[0,20,60,120], fare:"Rs. 350–450" },
+  "100": { name:"Colombo → Matara",   operator:"SLTB",          opClass:"op-sltb",    type:"Long Distance", color:"#D97706",
+    stops:["Colombo Fort","Panadura","Galle","Ahangama","Weligama","Matara"], times:[0,30,75,105,125,150], fare:"Rs. 300–400" },
+  "122": { name:"Kadawatha → Colombo",operator:"Nimbus Pilot",  opClass:"op-nimbus",  type:"City",          color:"#7C3AED",
+    stops:["Kadawatha","Kiribathgoda","Peliyagoda","Maradana","Colombo Fort"], times:[0,15,30,50,65], fare:"Rs. 60–80" }
+};
+
+let buses = {
+  "SLTB-138": { route:"138", sIdx:0, nIdx:1, eta:480, status:"on_time", pax:55 },
+  "PVT-01":   { route:"01",  sIdx:1, nIdx:2, eta:320, status:"slight",  pax:38 },
+  "SLTB-100": { route:"100", sIdx:2, nIdx:3, eta:210, status:"on_time", pax:62 },
+  "NMB-122":  { route:"122", sIdx:0, nIdx:1, eta:600, status:"on_time", pax:27 }
+};
+
+let announcements=[], openRoutes={};
+let mapObj, busMarkers={};
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function sLabel(s){ return s==="on_time"?"On time":s==="slight"?"Slight delay":"Delayed"; }
+function sClass(s){ return s==="on_time"?"s-on_time":s==="slight"?"s-slight":"s-delayed"; }
+function etaStr(sec){ return (sec<=30)?"Arriving":Math.round(sec/60)+" min"; }
+
+function lerp(a,b,t){ return a+(b-a)*t; }
+
+function getBusLatLng(b){
+  const r=ROUTES[b.route];
+  const from=COORDS[r.stops[b.sIdx]], to=COORDS[r.stops[b.nIdx]];
+  if(!from||!to) return from||to||[7.8731,80.7718];
+  const segSec=(r.times[b.nIdx]-r.times[b.sIdx])*60||300;
+  const elapsed=Math.max(0,segSec-b.eta);
+  const t=Math.min(1,elapsed/segSec);
+  return [lerp(from[0],to[0],t), lerp(from[1],to[1],t)];
+}
+
+// ── MAP INIT ─────────────────────────────────────────────────────────────────
+function initLeafletMap(){
+  mapObj = L.map('map', {
+    center:[7.8731, 80.7718],
+    zoom:8,
+    zoomControl:true,
+    attributionControl:true
+  });
+
+  // OpenStreetMap tile layer — free, no key needed
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom:19
+  }).addTo(mapObj);
+
+  // Draw route polylines
+  for(const [num,r] of Object.entries(ROUTES)){
+    const latlngs = r.stops.map(s=>COORDS[s]).filter(Boolean);
+    L.polyline(latlngs,{
+      color: r.color,
+      weight: 4,
+      opacity: 0.55,
+      dashArray: null
+    }).addTo(mapObj).bindTooltip(`Route ${num}: ${r.name}`, {sticky:true});
+  }
+
+  // Draw stop markers
+  const drawn=new Set();
+  for(const [num,r] of Object.entries(ROUTES)){
+    r.stops.forEach((stopName,i)=>{
+      if(drawn.has(stopName)) return;
+      drawn.add(stopName);
+      const pos=COORDS[stopName];
+      if(!pos) return;
+      const isTerminal=(i===0||i===r.stops.length-1);
+      const stopIcon=L.divIcon({
+        className:'',
+        html:`<div style="width:${isTerminal?12:9}px;height:${isTerminal?12:9}px;border-radius:50%;
+              background:${isTerminal?r.color:'#fff'};border:2px solid ${r.color};
+              box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>`,
+        iconSize:[isTerminal?12:9,isTerminal?12:9],
+        iconAnchor:[isTerminal?6:4.5,isTerminal?6:4.5]
+      });
+      L.marker(pos,{icon:stopIcon,zIndexOffset:0})
+        .addTo(mapObj)
+        .bindPopup(`<b>${stopName}</b><br><span style="color:#6B7280;font-size:11px">Bus stop · Route ${num} · ${r.name}</span>`);
+    });
+  }
+
+  // Draw bus markers
+  for(const [id,b] of Object.entries(buses)){
+    const pos=getBusLatLng(b);
+    createBusMarker(id,b,pos);
+  }
+}
+
+function busIconHTML(id,b){
+  const r=ROUTES[b.route];
+  const ring = b.status==="delayed"?"#DC2626":b.status==="slight"?"#D97706":r.color;
+  return `<div style="
+    width:38px;height:38px;border-radius:50%;
+    background:${r.color};
+    border:3px solid ${ring};
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;cursor:pointer;
+    transition:transform .2s;
+  ">🚌</div>`;
+}
+
+function createBusMarker(id,b,pos){
+  const icon=L.divIcon({
+    className:'',
+    html:busIconHTML(id,b),
+    iconSize:[38,38],
+    iconAnchor:[19,19]
+  });
+  const marker=L.marker(pos,{icon,zIndexOffset:1000,riseOnHover:true})
+    .addTo(mapObj)
+    .bindPopup(busPopupHTML(id,b), {maxWidth:240});
+  marker.on('click',()=>{
+    highlightCard(id);
+  });
+  busMarkers[id]=marker;
+}
+
+function busPopupHTML(id,b){
+  const r=ROUTES[b.route];
+  const sc=b.status==="on_time"?"color:#1B8C5E;background:#E4F5EE":b.status==="slight"?"color:#92400E;background:#FEF3C7":"color:#991B1B;background:#FEE2E2";
+  return `<div>
+    <div class="popup-bus-id">🚌 ${id}</div>
+    <span class="popup-status" style="${sc}">${sLabel(b.status)}</span>
+    <div class="popup-row">🛤️ ${r.name}</div>
+    <div class="popup-row">🏢 ${r.operator}</div>
+    <div class="popup-row">📍 From: <b>${r.stops[b.sIdx]}</b></div>
+    <div class="popup-row">🏁 Next: <b>${r.stops[b.nIdx]}</b></div>
+    <div class="popup-row">⏱️ ETA: <b>${etaStr(b.eta)}</b></div>
+    <div class="popup-row">👥 Passengers: <b>${b.pax}</b></div>
+    <div class="popup-row">🎫 Fare: ${r.fare}</div>
+  </div>`;
+}
+
+function updateMapMarkers(){
+  for(const [id,b] of Object.entries(buses)){
+    const pos=getBusLatLng(b);
+    if(!busMarkers[id]) continue;
+    busMarkers[id].setLatLng(pos);
+    busMarkers[id].setIcon(L.divIcon({
+      className:'',
+      html:busIconHTML(id,b),
+      iconSize:[38,38],
+      iconAnchor:[19,19]
+    }));
+    busMarkers[id].setPopupContent(busPopupHTML(id,b));
+  }
+}
+
+function focusOnMap(id){
+  const b=buses[id];
+  const pos=getBusLatLng(b);
+  mapObj.setView(pos,12,{animate:true});
+  busMarkers[id]&&busMarkers[id].openPopup();
+  document.getElementById('mapsec').scrollIntoView({behavior:'smooth'});
+}
+
+function highlightCard(id){
+  document.querySelectorAll('.bus-card').forEach(c=>c.classList.remove('selected'));
+  const card=document.getElementById('card-'+id);
+  if(card){ card.classList.add('selected'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+}
+
+// ── UI RENDERING ─────────────────────────────────────────────────────────────
+function addAnn(msg,type='info'){
+  const t=new Date().toLocaleTimeString('en-LK',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  announcements.unshift({t,msg,type});
+  if(announcements.length>20) announcements.pop();
+  const el=document.getElementById('ann-list');
+  if(el) el.innerHTML=announcements.map(a=>{
+    const dc=a.type==='warn'?'a-dot warn':a.type==='info'?'a-dot info':'a-dot';
+    return `<div class="ann-item"><span class="a-time">${a.t}</span><span class="${dc}"></span><span>${a.msg}</span></div>`;
+  }).join('');
+}
+
+function renderBuses(){
+  const el=document.getElementById('bus-list');
+  let pax=0,onT=0,html='';
+  for(const [id,b] of Object.entries(buses)){
+    const r=ROUTES[b.route];
+    const segSec=(r.times[b.nIdx]-r.times[b.sIdx])*60||300;
+    const elapsed=Math.max(0,segSec-b.eta);
+    const prog=Math.max(5,Math.min(95,Math.round((elapsed/segSec)*100)));
+    pax+=b.pax; if(b.status==='on_time') onT++;
+    const msgs=[
+      `${id} heading to ${r.stops[b.nIdx]} — ${etaStr(b.eta)} away. ${b.pax} passengers onboard.`,
+      `Route ${r.name}: ${sLabel(b.status).toLowerCase()} with ${b.pax} passengers.`,
+      `Next stop ${r.stops[b.nIdx]}. Fare: ${r.fare}. Status: ${sLabel(b.status)}.`
+    ];
+    const aiMsg=msgs[Math.floor(Date.now()/10000)%msgs.length];
+    html+=`<div class="bus-card" id="card-${id}" onclick="focusOnMap('${id}')">
+      <div class="accent-bar" style="background:${r.color}"></div>
+      <div class="card-inner">
+        <div class="bus-top">
+          <div><div class="bus-id">${id}</div><div class="bus-rname">${r.name} · ${r.operator}</div></div>
+          <span class="status-pill ${sClass(b.status)}">${sLabel(b.status)}</span>
+        </div>
+        <div class="bus-stops">
+          <span class="stop-tag">${r.stops[b.sIdx]}</span>
+          <span class="stop-arr">→</span>
+          <span class="stop-tag">${r.stops[b.nIdx]}</span>
+          <span class="eta-tag">${etaStr(b.eta)}</span>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-track"><div class="prog-fill" style="width:${prog}%;background:${r.color}"></div></div>
+          <div class="prog-labels"><span>${r.stops[b.sIdx]}</span><span>${r.stops[b.nIdx]}</span></div>
+        </div>
+        <div class="bus-meta">
+          <span>👥 ${b.pax} passengers</span>
+          <span>🎫 ${r.fare}</span>
+          <span>🚦 ${r.type}</span>
+        </div>
+        <div class="ai-note">🤖 ${aiMsg}</div>
+        <button class="show-map-btn" onclick="event.stopPropagation();focusOnMap('${id}')">📍 Show on map</button>
+      </div>
+    </div>`;
+  }
+  el.innerHTML=html;
+  document.getElementById('h-pax').textContent=pax;
+  document.getElementById('h-ontime').textContent=Math.round((onT/4)*100)+'%';
+  document.getElementById('buses-count').textContent=Object.keys(buses).length+' live';
+}
+
+function renderRoutes(){
+  const el=document.getElementById('route-list');
+  let html='';
+  for(const [num,r] of Object.entries(ROUTES)){
+    const open=openRoutes[num];
+    html+=`<div class="route-card">
+      <div class="route-head" onclick="toggleRoute('${num}')">
+        <span class="route-num">${num}</span>
+        <div class="route-info"><div class="rname">${r.name}</div><div class="rop ${r.opClass}">${r.operator} · ${r.type}</div></div>
+        <span class="rtoggle${open?' open':''}">▾</span>
+      </div>
+      <div class="route-body${open?' open':''}">
+        <div class="stop-tl">
+          ${r.stops.map((s,i)=>`<div class="stop-tl-item"><div class="stop-row"><span class="sname">${s}</span><span class="smin">${r.times[i]} min</span></div></div>`).join('')}
+        </div>
+        <div class="route-fare">🎫 Estimated fare: <span class="fare-val">${r.fare}</span></div>
+      </div>
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+function toggleRoute(n){ openRoutes[n]=!openRoutes[n]; renderRoutes(); }
+
+// ── TICK ─────────────────────────────────────────────────────────────────────
+function tick(){
+  for(const [id,b] of Object.entries(buses)){
+    b.eta-=5;
+    if(b.eta<=0){
+      const r=ROUTES[b.route];
+      b.sIdx=b.nIdx;
+      b.nIdx=(b.nIdx+1)%r.stops.length;
+      if(b.nIdx===0){b.sIdx=0;b.nIdx=1;}
+      const diff=r.times[b.nIdx]-r.times[b.sIdx];
+      b.eta=Math.max(diff*60,120);
+      b.pax=15+Math.floor(Math.random()*60);
+      const roll=Math.random();
+      b.status=roll<.70?'on_time':roll<.88?'slight':'delayed';
+      addAnn(`${id} arrived at ${r.stops[b.sIdx]} — next: ${r.stops[b.nIdx]} (${etaStr(b.eta)})`, b.status==='on_time'?'info':'warn');
+    }
+  }
+  renderBuses();
+  updateMapMarkers();
+}
+
+function clock(){
+  document.getElementById('nav-clock').textContent=
+    new Date().toLocaleTimeString('en-LK',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+function askAI(q){ document.getElementById('ai-input').value=q; sendAI(); }
+function sendAI(){
+  const q=(document.getElementById('ai-input').value||'').trim();
+  if(!q) return;
+  const el=document.getElementById('ai-resp');
+  el.className='ai-resp show';
+  el.innerHTML='<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>&nbsp;Thinking...</div>';
+  setTimeout(()=>{
+    const l=q.toLowerCase(); let a='';
+    if(l.includes('delay')||l.includes('late')||l.includes('on time')){
+      const d=Object.entries(buses).filter(([,b])=>b.status!=='on_time');
+      a=!d.length?'✅ All buses running on time. No delays.':
+        '⚠️ Delays:<br>'+d.map(([id,b])=>`• <b>${id}</b> (${ROUTES[b.route].name}): ${sLabel(b.status)}`).join('<br>');
+      const h=new Date().getHours();
+      if((h>=7&&h<=10)||(h>=16&&h<=19)) a+='<br><br>📍 Colombo rush hour active — 15–40 min delays expected.';
+    } else if(l.includes('where')||l.includes('location')||l.includes('all bus')){
+      a='📍 Bus positions:<br>'+Object.entries(buses).map(([id,b])=>{
+        const r=ROUTES[b.route];
+        return `• <b>${id}</b>: At ${r.stops[b.sIdx]} → ${r.stops[b.nIdx]} (${etaStr(b.eta)})`;
+      }).join('<br>');
+    } else if(l.includes('fare')||l.includes('cost')||l.includes('price')){
+      if(l.includes('kandy')) a='🎫 <b>Colombo → Kandy</b> (138 SLTB): <b>Rs. 250–350</b> · ~2h';
+      else if(l.includes('galle')) a='🎫 <b>Colombo → Galle</b> (01 Private): <b>Rs. 350–450</b> · ~2h';
+      else if(l.includes('matara')) a='🎫 <b>Colombo → Matara</b> (100 SLTB): <b>Rs. 300–400</b> · ~2.5h';
+      else a='🎫 Fares:<br>• 138 Colombo→Kandy: Rs. 250–350<br>• 01 Colombo→Galle: Rs. 350–450<br>• 100 Colombo→Matara: Rs. 300–400<br>• 122 Kadawatha→Colombo: Rs. 60–80';
+    } else if(l.includes('eta')||l.includes('arrive')||l.includes('when')||l.includes('next')){
+      if(l.includes('kandy')||l.includes('138')){ const b=buses['SLTB-138'],r=ROUTES['138']; a=`🕐 <b>SLTB-138</b>: at ${r.stops[b.sIdx]}, next <b>${r.stops[b.nIdx]}</b> in <b>${etaStr(b.eta)}</b>. ${sLabel(b.status)}.`; }
+      else if(l.includes('galle')||l.includes('01')){ const b=buses['PVT-01'],r=ROUTES['01']; a=`🕐 <b>PVT-01</b>: at ${r.stops[b.sIdx]}, next <b>${r.stops[b.nIdx]}</b> in <b>${etaStr(b.eta)}</b>.`; }
+      else if(l.includes('matara')){ const b=buses['SLTB-100'],r=ROUTES['100']; a=`🕐 <b>SLTB-100</b>: at ${r.stops[b.sIdx]}, next <b>${r.stops[b.nIdx]}</b> in <b>${etaStr(b.eta)}</b>.`; }
+      else a='🕐 ETAs:<br>'+Object.entries(buses).map(([id,b])=>`• <b>${id}</b>: ${etaStr(b.eta)} to ${ROUTES[b.route].stops[b.nIdx]}`).join('<br>');
+    } else if(l.includes('route')||l.includes('which')){
+      if(l.includes('kandy')) a='🗺️ Take <b>Route 138</b> (SLTB) from Colombo Fort → Kegalle → Peradeniya → Kandy. ~2h, Rs. 250–350.';
+      else if(l.includes('galle')) a='🗺️ Take <b>Route 01</b> (Private Express) from Colombo Fort → Kottawa → Gelangama → Galle. ~2h, Rs. 350–450.';
+      else if(l.includes('matara')) a='🗺️ Take <b>Route 100</b> (SLTB) Colombo Fort → Panadura → Galle → Weligama → Matara. ~2.5h.';
+      else a='🗺️ Routes:<br>• <b>138</b>: Colombo→Kandy (SLTB)<br>• <b>01</b>: Colombo→Galle (Private)<br>• <b>100</b>: Colombo→Matara (SLTB)<br>• <b>122</b>: Kadawatha→Colombo (Nimbus)';
+    } else {
+      a='Try asking:<br>• "Any delays?" · "Where are all buses?"<br>• "Fare to Kandy / Galle / Matara"<br>• "ETA for Kandy bus" · "Which route to Galle?"';
+    }
+    el.innerHTML=a;
+    addAnn(`AI: "${q.length>40?q.slice(0,40)+'...':q}"`, 'info');
+  }, 500);
+  document.getElementById('ai-input').value='';
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', ()=>{
+  initLeafletMap();
+  renderBuses();
+  renderRoutes();
+  addAnn('System online. Tracking 4 buses across Sri Lanka.', 'info');
+  addAnn('SLTB-138 departed Colombo Fort — heading to Kegalle.', 'info');
+  addAnn('PVT-01 reported slight delay near Kottawa.', 'warn');
+  setInterval(tick, 5000);
+  setInterval(clock, 1000);
+  clock();
+});
+</script>
+</body>
+</html>
